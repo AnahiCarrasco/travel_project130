@@ -3,6 +3,7 @@ const cors = require("cors");
 const swaggerUi = require("swagger-ui-express");
 const swaggerDocument = require("./swagger");
 
+const { sequelize } = require("./models");
 const flightsRoutes = require("./routes/flights");
 const accommodationsRoutes = require("./routes/accommodations");
 const activitiesRoutes = require("./routes/activities");
@@ -27,7 +28,19 @@ app.use((req, res) => {
   res.status(404).json({ message: "Route not found" });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-  console.log(`Swagger docs on http://localhost:${PORT}/api-docs`);
-});
+async function start() {
+  try {
+    await sequelize.authenticate();
+    console.log("Database connection established.");
+    await sequelize.sync();
+    app.listen(PORT, () => {
+      console.log(`Server running on http://localhost:${PORT}`);
+      console.log(`Swagger docs on http://localhost:${PORT}/api-docs`);
+    });
+  } catch (err) {
+    console.error("Failed to start server:", err);
+    process.exit(1);
+  }
+}
+
+start();
