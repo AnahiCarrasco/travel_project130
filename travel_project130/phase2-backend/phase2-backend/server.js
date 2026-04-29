@@ -9,6 +9,7 @@ const { sequelize } = require("./models");
 const flightsRoutes = require("./routes/flights");
 const accommodationsRoutes = require("./routes/accommodations");
 const activitiesRoutes = require("./routes/activities");
+const tripsRoutes = require("./routes/trips");
 const authRoutes = require("./routes/auth");
 
 const app = express();
@@ -25,6 +26,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/flights", flightsRoutes);
 app.use("/api/accommodations", accommodationsRoutes);
 app.use("/api/activities", activitiesRoutes);
+app.use("/api/trips", tripsRoutes);
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
