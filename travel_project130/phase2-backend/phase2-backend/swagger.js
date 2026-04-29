@@ -3,7 +3,7 @@ module.exports = {
   info: {
     title: "Phase 2 Search API",
     version: "1.0.0",
-    description: "Search APIs for flights, accommodations, and activities",
+    description: "Search APIs for flights, accommodations, activities, and budget-based trip recommendations",
   },
   servers: [
     {
@@ -64,6 +64,69 @@ module.exports = {
           200: { description: "Activities found" },
           400: { description: "Invalid request" },
           500: { description: "Server error" }
+        }
+      }
+    },
+
+    "/api/trips/recommendations": {
+      get: {
+        summary: "Get budget-based trip recommendations",
+        description:
+          "Combines available flight and accommodation options, calculates total trip cost, and returns only combinations within the user's budget.",
+        parameters: [
+          {
+            name: "destination",
+            in: "query",
+            required: true,
+            schema: { type: "string" },
+            example: "LON"
+          },
+          {
+            name: "departDate",
+            in: "query",
+            required: true,
+            schema: { type: "string", format: "date" },
+            example: "2026-06-10"
+          },
+          {
+            name: "returnDate",
+            in: "query",
+            required: true,
+            schema: { type: "string", format: "date" },
+            example: "2026-06-17"
+          },
+          {
+            name: "travelers",
+            in: "query",
+            required: true,
+            schema: { type: "integer" },
+            example: 1
+          },
+          {
+            name: "guests",
+            in: "query",
+            required: true,
+            schema: { type: "integer" },
+            example: 1
+          },
+          {
+            name: "budget",
+            in: "query",
+            required: true,
+            schema: { type: "number" },
+            example: 1500
+          }
+        ],
+        responses: {
+          200: {
+            description: "Trip recommendations found or no trips found within budget"
+          },
+          400: {
+            description: "Invalid request parameters"
+          },
+          500: {
+            description: "Server error"
+          }
         }
       }
     }
