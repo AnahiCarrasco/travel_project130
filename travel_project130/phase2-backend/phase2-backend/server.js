@@ -1,3 +1,5 @@
+require("dotenv").config();
+
 const express = require("express");
 const cors = require("cors");
 const swaggerUi = require("swagger-ui-express");
@@ -7,6 +9,7 @@ const { sequelize } = require("./models");
 const flightsRoutes = require("./routes/flights");
 const accommodationsRoutes = require("./routes/accommodations");
 const activitiesRoutes = require("./routes/activities");
+const authRoutes = require("./routes/auth");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -18,6 +21,7 @@ app.get("/", (req, res) => {
   res.json({ message: "Phase 2 Search API is running" });
 });
 
+app.use("/api/auth", authRoutes);
 app.use("/api/flights", flightsRoutes);
 app.use("/api/accommodations", accommodationsRoutes);
 app.use("/api/activities", activitiesRoutes);
