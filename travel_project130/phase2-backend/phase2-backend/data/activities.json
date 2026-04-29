@@ -28,5 +28,23 @@
     "name": "Harry Potter Studio Tour",
     "category": "Day Tour",
     "price": 95
+  },
+  {
+    "id": "ACT006",
+    "name": "Hyde Park Stroll",
+    "category": "Park",
+    "price": 0
+  },
+  {
+    "id": "ACT007",
+    "name": "Tate Modern Gallery",
+    "category": "Museum",
+    "price": 0
+  },
+  {
+    "id": "ACT008",
+    "name": "Southbank Riverside Walk",
+    "category": "Walking Tour",
+    "price": 0
   }
 ]

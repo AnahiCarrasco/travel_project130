@@ -68,6 +68,40 @@ module.exports = {
       }
     },
 
+    "/api/tenants/{domain}/branding": {
+      get: {
+        summary: "Get tenant branding",
+        description: "Returns the logoUrl and themeColor for a tenant identified by domain.",
+        parameters: [
+          {
+            name: "domain",
+            in: "path",
+            required: true,
+            schema: { type: "string" },
+            example: "acme.travel"
+          }
+        ],
+        responses: {
+          200: {
+            description: "Tenant branding found",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    logoUrl: { type: "string", nullable: true },
+                    themeColor: { type: "string", nullable: true }
+                  }
+                }
+              }
+            }
+          },
+          404: { description: "Tenant not found" },
+          500: { description: "Server error" }
+        }
+      }
+    },
+
     "/api/trips/recommendations": {
       get: {
         summary: "Get budget-based trip recommendations",

@@ -12,6 +12,7 @@ const activitiesRoutes = require("./routes/activities");
 const tripsRoutes = require("./routes/trips");
 const authRoutes = require("./routes/auth");
 const bookingsRoutes = require("./routes/bookings");
+const tenantsRoutes = require("./routes/tenants");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -29,6 +30,7 @@ app.use("/api/accommodations", accommodationsRoutes);
 app.use("/api/activities", activitiesRoutes);
 app.use("/api/trips", tripsRoutes);
 app.use("/api/bookings", bookingsRoutes);
+app.use("/api/tenants", tenantsRoutes);
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
