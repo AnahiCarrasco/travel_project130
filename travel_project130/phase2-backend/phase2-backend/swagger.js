@@ -1,9 +1,10 @@
 module.exports = {
   openapi: "3.0.0",
   info: {
-    title: "Phase 2 Search API",
+    title: "Phase 2 Travel Agent SaaS API",
     version: "1.0.0",
-    description: "Search APIs for flights, accommodations, activities, and budget-based trip recommendations",
+    description:
+      "Search APIs (flights, accommodations, activities, trip recommendations), tenant branding, JWT authentication, and multi-tenant booking persistence.",
   },
   servers: [
     {
@@ -16,6 +17,8 @@ module.exports = {
         type: "http",
         scheme: "bearer",
         bearerFormat: "JWT",
+        description:
+          "JWT obtained from POST /api/auth/login. Send as 'Authorization: Bearer <token>'.",
       },
     },
   },
@@ -299,6 +302,146 @@ module.exports = {
           500: {
             description: "Server error"
           }
+        }
+      }
+    },
+
+    "/api/auth/signup": {
+      post: {
+        summary: "Register a new user under a tenant",
+        description:
+          "Creates a user scoped to the given tenantDomain. Returns a JWT containing { userId, tenantId } that authorizes booking endpoints.",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["email", "password", "name", "tenantDomain"],
+                properties: {
+                  email: { type: "string", format: "email", example: "new@agency-a.com" },
+                  password: { type: "string", example: "test123" },
+                  name: { type: "string", example: "Test User" },
+                  tenantDomain: { type: "string", example: "agency-a.com" }
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          201: { description: "User created; returns token + user" },
+          400: { description: "Missing fields or unknown tenantDomain" },
+          409: { description: "Email already registered for this tenant" },
+          500: { description: "Server error" }
+        }
+      }
+    },
+
+    "/api/auth/login": {
+      post: {
+        summary: "Log in and receive a JWT",
+        description:
+          "Verifies email + password under the given tenantDomain. Returns 401 with a generic 'Invalid credentials' message on any failure (does not disclose whether the email exists).",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["email", "password", "tenantDomain"],
+                properties: {
+                  email: { type: "string", format: "email", example: "violet@agency-a.com" },
+                  password: { type: "string", example: "password123" },
+                  tenantDomain: { type: "string", example: "agency-a.com" }
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          200: { description: "Login successful; returns token + user" },
+          400: { description: "Missing fields or unknown tenantDomain" },
+          401: { description: "Invalid credentials" },
+          500: { description: "Server error" }
+        }
+      }
+    },
+
+    "/api/bookings": {
+      post: {
+        summary: "Create a booking",
+        description:
+          "Creates a booking under the caller's tenant (tenantId is sourced from the JWT, never from the request body). Server computes totalAmount from cached flight.price + accommodation.pricePerNight × nights.",
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["startDate", "endDate"],
+                properties: {
+                  flightId: { type: "string", example: "FL001" },
+                  accommodationId: { type: "string", example: "AC001" },
+                  startDate: { type: "string", format: "date", example: "2026-06-10" },
+                  endDate: { type: "string", format: "date", example: "2026-06-17" }
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          201: { description: "Booking created; status: Pending" },
+          400: { description: "Invalid input or unknown flight/accommodation ID" },
+          401: { description: "Missing or invalid JWT" },
+          500: { description: "Server error" }
+        }
+      },
+      get: {
+        summary: "List my bookings",
+        description:
+          "Returns bookings belonging to the authenticated user within their tenant. Other tenants' bookings are never returned (TC-07).",
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: { description: "Returns { results, count }" },
+          401: { description: "Missing or invalid JWT" },
+          500: { description: "Server error" }
+        }
+      }
+    },
+
+    "/api/bookings/{id}": {
+      get: {
+        summary: "Get a booking by ID",
+        description:
+          "Returns the booking only if it belongs to the caller's tenant. Cross-tenant access returns 404 (not 403) to avoid leaking row existence — matches TC-07.",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "id", in: "path", required: true, schema: { type: "integer" }, example: 1 }
+        ],
+        responses: {
+          200: { description: "Returns the booking" },
+          401: { description: "Missing or invalid JWT" },
+          404: { description: "Booking not found (or not in caller's tenant)" },
+          500: { description: "Server error" }
+        }
+      }
+    },
+
+    "/api/bookings/{id}/cancel": {
+      patch: {
+        summary: "Cancel a booking",
+        description:
+          "Sets status to Cancelled. Only the owning tenant can cancel; cross-tenant attempts return 404.",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "id", in: "path", required: true, schema: { type: "integer" }, example: 1 }
+        ],
+        responses: {
+          200: { description: "Booking cancelled" },
+          401: { description: "Missing or invalid JWT" },
+          404: { description: "Booking not found (or not in caller's tenant)" },
+          500: { description: "Server error" }
         }
       }
     }
