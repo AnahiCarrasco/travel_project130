@@ -10,7 +10,145 @@ module.exports = {
       url: "http://localhost:3000",
     },
   ],
+  components: {
+    securitySchemes: {
+      bearerAuth: {
+        type: "http",
+        scheme: "bearer",
+        bearerFormat: "JWT",
+      },
+    },
+  },
   paths: {
+    "/api/auth/signup": {
+      post: {
+        summary: "Register a new user",
+        tags: ["Auth"],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["email", "password", "name", "tenantDomain"],
+                properties: {
+                  email: { type: "string", example: "violet@agency-a.com" },
+                  password: { type: "string", example: "password123" },
+                  name: { type: "string", example: "Violet Backpacker" },
+                  tenantDomain: { type: "string", example: "agency-a.com" },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          201: { description: "User created, returns JWT token" },
+          400: { description: "Missing fields or unknown tenantDomain" },
+          409: { description: "Email already registered for this tenant" },
+          500: { description: "Server error" },
+        },
+      },
+    },
+    "/api/auth/login": {
+      post: {
+        summary: "Log in as an existing user",
+        tags: ["Auth"],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["email", "password", "tenantDomain"],
+                properties: {
+                  email: { type: "string", example: "violet@agency-a.com" },
+                  password: { type: "string", example: "password123" },
+                  tenantDomain: { type: "string", example: "agency-a.com" },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: "Login successful, returns JWT token" },
+          400: { description: "Missing fields or unknown tenantDomain" },
+          401: { description: "Invalid credentials" },
+          500: { description: "Server error" },
+        },
+      },
+    },
+    "/api/bookings": {
+      post: {
+        summary: "Create a booking",
+        tags: ["Bookings"],
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["startDate", "endDate"],
+                properties: {
+                  flightId: { type: "string", example: "FL001" },
+                  accommodationId: { type: "string", example: "AC001" },
+                  startDate: { type: "string", format: "date", example: "2026-06-10" },
+                  endDate: { type: "string", format: "date", example: "2026-06-17" },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          201: { description: "Booking created with status Pending" },
+          400: { description: "Validation error" },
+          401: { description: "Missing or invalid token" },
+          500: { description: "Server error" },
+        },
+      },
+      get: {
+        summary: "List my bookings",
+        tags: ["Bookings"],
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: { description: "List of bookings for the authenticated user" },
+          401: { description: "Missing or invalid token" },
+          500: { description: "Server error" },
+        },
+      },
+    },
+    "/api/bookings/{id}": {
+      get: {
+        summary: "Get a booking by ID",
+        tags: ["Bookings"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "id", in: "path", required: true, schema: { type: "integer" } },
+        ],
+        responses: {
+          200: { description: "Booking found" },
+          401: { description: "Missing or invalid token" },
+          404: { description: "Booking not found or belongs to another tenant" },
+          500: { description: "Server error" },
+        },
+      },
+    },
+    "/api/bookings/{id}/cancel": {
+      patch: {
+        summary: "Cancel a booking",
+        tags: ["Bookings"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "id", in: "path", required: true, schema: { type: "integer" } },
+        ],
+        responses: {
+          200: { description: "Booking cancelled" },
+          401: { description: "Missing or invalid token" },
+          404: { description: "Booking not found" },
+          500: { description: "Server error" },
+        },
+      },
+    },
     "/api/flights/search": {
       get: {
         summary: "Search flights",
